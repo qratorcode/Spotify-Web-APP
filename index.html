@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+
+<!--...-->
+
+<!--.. Client ID:     12a811f2edf54164a146a03c63ae99fa ..-->
+
+<html lang="en">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title> Mood Curator</title>
+
+<style>
+#mood_buttons {
+    display: flex;
+    flex-wrap: wrap;
+    backdrop-filter: blur(10px);
+    background: rgba(0, 0, 0, 0.4);
+    justify-content: center;
+    border-radius: 5px;
+    width: 50%;
+    margin: 0 auto;
+    
+}
+
+button {
+    background-color: #1a1a1a;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    
+}
+
+#mood_title {
+    text-align: center;
+    font-family: Arial;
+    color: white;
+    border-color: cadetblue;
+    border-radius: 5px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+<!--  display for login -->
+
+
+<div id="login_display">
+    <h1> Let your mood guide your tunes :)</h1>
+    <p> Pick a mood. Get a curated playlist</p>
+    <button onclick="login()">Login With Spotify</button>
+    </div>
+
+    
+
+<div id="app_display" style ="display:none;">
+    <h1 id="mood_title">Discover a Video Game Sountrack That Fits Your Mood</h1>
+    <div id="mood_buttons">
+    <button onclick="search_mood('focused')">Focused</button>
+    <button onclick="search_mood('sad')">Sad</button>
+    <button onclick="search_mood('hyped')">Hype</button>
+    <button onclick="search_mood('calm')">Calm</button>
+    <button onclick="search_mood('creative')">Creative</button>
+    <button onclick="search_mood('sonder')">Sonder</button>
+    <button onclick="search_mood('melancholic')">Melancholic</button>
+    <button onclick="search_mood('brooding')">Brooding</button>
+    <button onclick="search_mood('intilectual')">Intilectual</button>
+    <button onclick="search_mood('innatentive')">Innatentive</button>
+    <button onclick="search_mood('noir')">Noir</button>
+    </div>
+    <div id="results"></div>
+</div>
+
+
+
+        
+
+<!-- web app screen/display-->
+
+
+<script>
+
+    const CLIENT_ID = '12a811f2edf54164a146a03c63ae99fa';
+    const REDIRECT_URI= 'https://qratorcode.github.io/Spotify-Web-APP';
+
+    /////Random string section
+
+function random_string(length) {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let result = "";
+  for (let i = 0; i < length; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+}
+
+
+const sha256 = async (plain) => {
+
+    const encoder = new TextEncoder();
+    const data = encoder.encode(plain)
+    return window.crypto.subtle.digest('SHA-256', data);
+
+}
+
+
+const base64encode = (input) => {
+
+    return btoa(String.fromCharCode(...new Uint8Array(input)))
+
+    .replace(/=/g, '')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_');
+}
+
+
+
+////// login section
+
+const login = async () => {
+  const code_verifier = random_string(64);
+  const hashed = await sha256(code_verifier);
+  const code_challenge = base64encode(hashed);
+
+  localStorage.setItem('code_verifier', code_verifier);
+
+  const auth_url = new URL('https://accounts.spotify.com/authorize');
+  auth_url.search = new URLSearchParams({
+    response_type: 'code',
+    client_id: CLIENT_ID,
+    scope: 'user-read-private user-read-email',
+    code_challenge_method: 'S256',
+    code_challenge: code_challenge,
+    redirect_uri: REDIRECT_URI,
+  }).toString();
+
+  window.location.href = auth_url.toString();
+}
+
+
+const token_getter = async code => {
+
+  const codeVerifier = localStorage.getItem('code_verifier');
+
+  const url = "https://accounts.spotify.com/api/token";
+  const payload = {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: new URLSearchParams({
+      client_id: CLIENT_ID,
+      grant_type: 'authorization_code',
+      code,
+      redirect_uri: REDIRECT_URI,
+      code_verifier: codeVerifier,
+    }),
+  }
+
+
+
+  const body = await fetch(url, payload);
+  const response = await body.json();
+
+  localStorage.setItem('access_token', response.access_token);
+}
+
+
+(async () => {
+  let params = new URLSearchParams(window.location.search);
+  let code = params.get('code');
+
+  if (code) {
+    await token_getter(code);
+    window.history.replaceState({}, document.title, REDIRECT_URI);
+    show_app();
+  } else {
+    show_login();
+  }
+})();
+
+/////get element by ID section
+
+function show_login(){
+
+    var login = document.getElementById('login_display');
+    var app = document.getElementById('app_display');
+    login.style.display = "block";
+    app.style.display = "none";
+  
+
+
+}
+
+function show_app() {
+
+    var login = document.getElementById('login_display');
+    var app = document.getElementById('app_display');
+
+    login.style.display = "none";
+    app.style.display = "block";
+}
+
+
+
+////access token section
+
+
+async function search_mood(mood) {
+  let accessToken = localStorage.getItem('access_token');
+  document.body.style.backgroundImage = 'url(' + mood_map[mood].img + ')';
+  document.body.style.backgroundSize = 'cover';
+  
+  const response = await fetch('https://api.spotify.com/v1/search?q=' + mood_map[mood].search + '&type=track&limit=10&offset=' + Math.floor(Math.random() * 50), {
+    headers: {
+      Authorization: 'Bearer ' + accessToken
+    }
+  });
+
+  const data = await response.json();
+  render_results(data.tracks.items);
+}
+
+
+
+const mood_map = {
+  focused: { search: 'lofi', img: 'https://i.makeagif.com/media/2-11-2024/7Zjkgz.gif' },
+  hyped: { search: 'Tekken+OST+Bandai+Namco+instrumental', img: 'https://cdn.theouterhaven.net/wp-content/uploads/2022/09/Tekken-8-Reveal-Trailer-Screw-Attack-1.gif' },
+  calm: { search: 'Minecraft+C418', img: 'https://i.pinimg.com/originals/b6/f1/b5/b6f1b544cf177662009287d58fa4cd9a.gif' },
+  creative: { search: 'Journey+OST+Austin+Wintory+orchestral+instrumental', img: 'https://i.imgur.com/17l3rp0.gif' },
+  sonder: { search: 'Dark+Souls+OST+Motoi+Sakuraba+orchestral+instrumental', img: 'https://preview.redd.it/i-made-some-gifs-v0-9yugvn57e5o81.gif?width=840&auto=webp&s=bd035c66975138ee0b225a14e39c4ea06db44a45' },
+  melancholic: { search: 'NieR+Automata+OST+Keiichi+Okabe+instrumental', img: 'https://64.media.tumblr.com/422ea5190490fb6a755651c55010a86a/96b8d1634041d7f5-19/s540x810/0ec858826237066154ef4984facae7b6fe86b327.gif' },
+  brooding: { search: 'Silent+Hill+OST+Akira+Yamaoka+industrial+ambient', img: 'https://i.pinimg.com/originals/5c/27/bf/5c27bf372ff7d9028ea3c20b0d505659.gif' },
+  intilectual: { search: 'Solar+Fields+Mirror+Edge+OST+electronic+ambient', img: 'https://64.media.tumblr.com/accc114f07e58b3b2acd51521b5c45eb/619583a00b7078cb-1b/s540x810/ced50114e8b3a8d22d7a859a9723dd9701a6b1c1.gif' },
+  innatentive: { search: 'Animal+Crossing+OST+Nintendo+ambient+instrumental', img: 'https://preview.redd.it/spent-an-hour-transporting-this-from-my-switch-turning-the-v0-9koox0x338f91.gif?width=600&auto=webp&s=d07d9ab08555f91d3cfe80540ea44f43eb52f97d' },
+  noir: { search: 'LA+Noire+OST+jazz+1940s+instrumental', img: 'https://www.hollywoodreporter.com/wp-content/uploads/2021/05/giphy-12.15.07-PM-1620063285.gif?w=480' },
+};
+
+
+function render_results(tracks) {
+    document.getElementById("results").innerHTML = "";
+
+    tracks.forEach(track => {
+        var iframe = document.createElement('iframe');
+        iframe.src = 'https://open.spotify.com/embed/track/' + track.id;
+        iframe.width = '300';
+        iframe.height = '80';
+        iframe.frameBorder = '0';
+        document.getElementById('results').appendChild(iframe);
+    });
+}
+
+</script>
+
+
+</body>
+
+
+</html>
+
+
+
