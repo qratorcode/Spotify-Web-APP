@@ -18,6 +18,7 @@ Currently If you want to use this aplication you will have to log in through you
 desktop and mobile.
 
 -Desktop Demo Link https://youtu.be/-QclCTlT-ZI
+-Mobile Demo Link https://youtube.com/shorts/kgXl6h5wxXY
 
 Features:
 
