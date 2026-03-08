@@ -1,5 +1,7 @@
 Readme For Spotify Mood Reccomender
 
+Here is the link to try it yourself https://qratorcode.github.io/Spotify-Web-APP/
+
 
   This project is a web application that aligns the user's mood with song recommendations. The recommendations are video game focused, but the algorithm to recommend songs sometimes leads out of that niche.
 This was built using the Spotify Web API, built in vanilla HTML, CSS and JavaScript. No frameworks or dependencies were used.
