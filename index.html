@@ -61,9 +61,9 @@ button {
 
     
 
-<div id="app_display" style ="display:none;">
+<div id="app_display" style ="display:none;">     <!--.  display for app..-->
     <h1 id="mood_title">Discover a Video Game Sountrack That Fits Your Mood</h1>
-    <div id="mood_buttons">
+    <div id="mood_buttons">    <!--.   buttons for selecting mood choice..-->
     <button onclick="search_mood('focused')">Focused</button>
     <button onclick="search_mood('sad')">Sad</button>
     <button onclick="search_mood('hyped')">Hype</button>
@@ -76,7 +76,7 @@ button {
     <button onclick="search_mood('innatentive')">Innatentive</button>
     <button onclick="search_mood('noir')">Noir</button>
     </div>
-    <div id="results"></div>
+    <div id="results"></div>     <!--..   embed results.-->
 </div>
 
 
@@ -102,8 +102,8 @@ function random_string(length) {
   return result;
 }
 
-
-const sha256 = async (plain) => {
+  //// hashes  a string using SHA-256
+const sha256 = async (plain) => {    
 
     const encoder = new TextEncoder();
     const data = encoder.encode(plain)
@@ -112,7 +112,7 @@ const sha256 = async (plain) => {
 }
 
 
-const base64encode = (input) => {
+const base64encode = (input) => {    /// encodes buffer to a base64 url format, required for Spotifys PKCE
 
     return btoa(String.fromCharCode(...new Uint8Array(input)))
 
@@ -146,7 +146,7 @@ const login = async () => {
 }
 
 
-const token_getter = async code => {
+const token_getter = async code => {     /////exhanges the authorization code for an access token
 
   const codeVerifier = localStorage.getItem('code_verifier');
 
@@ -174,7 +174,7 @@ const token_getter = async code => {
 }
 
 
-(async () => {
+(async () => {    /////checks for authorization code on a page load
   let params = new URLSearchParams(window.location.search);
   let code = params.get('code');
 
@@ -212,7 +212,7 @@ function show_app() {
 
 
 ////access token section
-
+///searches spotify by mood and also sets a background gif for a mood
 
 async function search_mood(mood) {
   let accessToken = localStorage.getItem('access_token');
@@ -230,7 +230,7 @@ async function search_mood(mood) {
 }
 
 
-
+/////mood to search query , and the backgroung gif map/link inserts
 const mood_map = {
   focused: { search: 'lofi', img: 'https://i.makeagif.com/media/2-11-2024/7Zjkgz.gif' },
   hyped: { search: 'Tekken+OST+Bandai+Namco+instrumental', img: 'https://cdn.theouterhaven.net/wp-content/uploads/2022/09/Tekken-8-Reveal-Trailer-Screw-Attack-1.gif' },
@@ -245,7 +245,7 @@ const mood_map = {
 };
 
 
-function render_results(tracks) {
+function render_results(tracks) {    ////renders the spotify iframs
     document.getElementById("results").innerHTML = "";
 
     tracks.forEach(track => {
